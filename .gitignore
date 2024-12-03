@@ -2,3 +2,6 @@
 zig-out/
 input.txt
 sample.txt
+*.o
+part1
+part2
