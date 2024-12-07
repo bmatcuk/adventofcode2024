@@ -41,6 +41,9 @@ const Matrix = struct {
         const tuple = direction.to_tuple();
         const posx = x + tuple[0];
         const posy = y + tuple[1];
+        if (posx < 0 or posy < 0) {
+            return null;
+        }
         return self.try_get(@intCast(posx), @intCast(posy));
     }
 };
@@ -69,17 +72,18 @@ pub fn main() !void {
 
     const posidx = std.mem.indexOfScalar(u8, data, '^') orelse return error.NoGuard;
     var current_x: isize = @intCast(posidx % (width + 1));
-    var current_y: isize = @intCast(posidx / height);
+    var current_y: isize = @intCast(posidx / (width + 1));
     var direction = Direction.up;
 
     const visited = try allocator.alloc(bool, width * height);
-    visited[@intCast(current_y * @as(isize, @intCast(height)) + current_x)] = true;
+    @memset(visited, false);
+    visited[@intCast(current_y * @as(isize, @intCast(width)) + current_x)] = true;
 
     const stdout = std.io.getStdOut().writer();
     try stdout.print("Puzzle {d}x{d}\n", .{ width, height });
     try stdout.print("Guard {d}x{d}\n", .{ current_x, current_y });
 
-    var num_visited: u32 = 0;
+    var num_visited: u32 = 1;
     while (puzzle.try_get_direction(current_x, current_y, direction)) |char| switch (char) {
         '#' => direction = switch (direction) {
             Direction.up => Direction.right,
@@ -92,7 +96,7 @@ pub fn main() !void {
             current_x += direction_tuple[0];
             current_y += direction_tuple[1];
 
-            const idx: usize = @intCast(current_y * @as(isize, @intCast(height)) + current_x);
+            const idx: usize = @intCast(current_y * @as(isize, @intCast(width)) + current_x);
             if (!visited[idx]) {
                 visited[idx] = true;
                 num_visited += 1;
